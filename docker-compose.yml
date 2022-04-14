@@ -1,0 +1,33 @@
+version: '2'
+services:
+  proxy_pool:
+    build: .
+    container_name: proxy_pool_pod
+    ports:
+      - "5010:5010"
+    links:
+      - proxy_redis
+    environment:
+      DB_CONN: "redis://:fNWwCuuBjN@proxy_redis:6379/0"
+      REDIS_KEY: "proxy:pool"
+  
+  openresty:
+    build: 
+      context: "./openresty"
+      dockerfile: "Dockerfile"
+    container_name: tunnel_proxy_pod
+    restart: on-failure
+    ports:
+      - "9976:9976"
+    links:
+      - proxy_redis
+    environment:
+      REDIS_HOST: "proxy_redis"
+      REDIS_PORT: 6379
+      REDIS_PASS: "fNWwCuuBjN"
+      REDIS_KEY: "proxy:pool"
+
+  proxy_redis:
+    image: "redis"
+    container_name: proxy_redis_pod
+    command: redis-server --requirepass fNWwCuuBjN
